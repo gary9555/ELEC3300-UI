@@ -37,11 +37,12 @@
 #include "console.h"
 #include "settingsdialog.h"
 #include <QMessageBox>
+#include <QLineEdit>
 
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
-    ui(new Ui::MainWindow),
-    x(0), y(0), z(0), r(0)
+    ui(new Ui::MainWindow)
+  //  x(0), y(0), z(0), r(0)
 {
     ui->setupUi(this);
     console = new Console;
@@ -63,7 +64,16 @@ MainWindow::MainWindow(QWidget *parent) :
     widget = new QWidget(this);
     QGridLayout* centralLayout = new QGridLayout(widget);
 
-    consoleGroupBox = new QGroupBox(tr("Console"),this);
+    createTimeGroupBox();
+    createStatusGroupBox();
+    createCommandGroupBox();
+
+    centralLayout->addWidget(timeGroupBox,0,0);
+    centralLayout->addWidget(statusGroupBox,0,1);
+    centralLayout->addWidget(commandGroupBox,1,0);
+
+
+    /*consoleGroupBox = new QGroupBox(tr("Console"),this);
     QVBoxLayout* consoleLayout = new QVBoxLayout(consoleGroupBox);
     consoleLayout->addWidget(console);
     consoleGroupBox->setLayout(consoleLayout);
@@ -76,19 +86,244 @@ MainWindow::MainWindow(QWidget *parent) :
     centralLayout->addWidget(controlSlidersGroupBox,1,0);
     centralLayout->addWidget(flightModeControlGroupBox,0,1);
     centralLayout->addWidget(consoleGroupBox,1,1);
-
+    */
     initUpdateConnections();
     initCommandConnections();
 
     widget->setLayout(centralLayout);
     setCentralWidget(widget);
 
-    resize(800,700);
-    setWindowTitle(QApplication::translate("toplevel", "Ground Control Station"));
+    resize(600,200);
+    setWindowTitle(QApplication::translate("toplevel", "Smart House Control Panel"));
 }
 
-/** Manual control sliders */
+MainWindow::~MainWindow()
+{
+    delete settings;
+    delete ui;
+}
 
+void MainWindow::createTimeGroupBox(){
+
+    timeGroupBox = new QGroupBox(tr("Time"),this);
+    QHBoxLayout* layout  = new QHBoxLayout(timeGroupBox);
+
+    timeLabel = new QLabel(this);//time since boot(ms)
+    timeLabel->setBaseSize(80,30);
+    timeLabel->setText(" ");
+
+    layout->addWidget(timeLabel);
+    timeGroupBox->setLayout(layout);
+}
+
+void MainWindow::createStatusGroupBox(){
+
+    statusGroupBox = new QGroupBox(tr("House Status"),this);
+    QGridLayout* layout  = new QGridLayout(statusGroupBox);
+
+    temperatureLabel = new QLabel(this);
+    temperatureLabel->setBaseSize(50,30);
+    temperatureLabel->setText("Current Temperature: Unknown");
+
+    doorConditionLabel = new QLabel(this);
+    doorConditionLabel->setBaseSize(50,30);
+    doorConditionLabel->setText("Door Status: Unknown");
+
+    layout->addWidget(temperatureLabel,0,0);
+    layout->addWidget(doorConditionLabel,1,0);
+
+    statusGroupBox->setLayout(layout);
+}
+
+void MainWindow::createCommandGroupBox(){
+
+    commandGroupBox = new QGroupBox(tr("Commands"),this);
+    QVBoxLayout* layout = new QVBoxLayout(commandGroupBox);
+
+    // Air conditioning commander
+    AcGroupBox = new QGroupBox(tr("Air-Conditioner"),this);
+    AcLayout = new QHBoxLayout(AcGroupBox);
+    turnOnAcButton = new QRadioButton("On",this);
+    turnOnAcButton->setChecked(false);
+    turnOffAcButton = new QRadioButton("Off",this);
+    turnOffAcButton->setChecked(true);
+
+    AcLayout->addWidget(turnOnAcButton);
+    AcLayout->addWidget(turnOffAcButton);
+    AcGroupBox->setLayout(AcLayout);
+
+    // Door commander
+    doorGroupBox = new QGroupBox(tr("Open Door"),this);
+    doorLayout = new QVBoxLayout(doorGroupBox);
+    uname = new QLabel(tr("Username"), this);
+    username = new QLineEdit(this);
+    pw = new QLabel(tr("Password"), this);
+    password = new QLineEdit(this);
+    password->setEchoMode(QLineEdit::Password);
+    password->setInputMethodHints(Qt::ImhHiddenText| Qt::ImhNoPredictiveText|Qt::ImhNoAutoUppercase);
+    openDoor = new QPushButton(tr("Login"), this);
+
+    doorLayout->addWidget(uname);
+    doorLayout->addWidget(username);
+    doorLayout->addWidget(pw);
+    doorLayout->addWidget(password);
+    doorLayout->addWidget(openDoor);
+    doorGroupBox->setLayout(doorLayout);
+
+    layout->addWidget(AcGroupBox);
+    layout->addWidget(doorGroupBox);
+
+    // connect slots
+    connect(turnOnAcButton,SIGNAL(clicked()),this,SLOT(onSetAc()));
+    connect(turnOffAcButton,SIGNAL(clicked()),this,SLOT(onSetAc()));
+    connect(openDoor,SIGNAL(clicked()),this,SLOT(onLogin()));
+
+    commandGroupBox->setLayout(layout);
+    commandGroupBox->setAlignment(Qt::AlignHCenter);
+}
+
+
+void MainWindow::openSerialPort()
+{
+    SettingsDialog::Settings p = settings->settings();
+    // linux uses absolute address
+    // windows uses relative address
+    // serial->setPortName("/dev/cu."+p.name);  (for mac)
+    serial->setPortName("/dev/"+p.name);  // for linux
+    serial->setBaudRate(p.baudRate);
+    serial->setDataBits(p.dataBits);
+    serial->setParity(p.parity);
+    serial->setStopBits(p.stopBits);
+    serial->setFlowControl(p.flowControl);
+    serial->timer->start(200);
+    if (serial->open(QIODevice::ReadWrite)) {
+            console->setEnabled(true);
+            console->setLocalEchoEnabled(p.localEchoEnabled);
+            ui->actionConnect->setEnabled(false);
+            ui->actionDisconnect->setEnabled(true);
+            ui->actionConfigure->setEnabled(false);
+            ui->statusBar->showMessage(tr("Connected to %1 : %2, %3, %4, %5, %6")
+                                       .arg(p.name).arg(p.stringBaudRate).arg(p.stringDataBits)
+                                       .arg(p.stringParity).arg(p.stringStopBits).arg(p.stringFlowControl));
+    } else {
+        QMessageBox::critical(this, tr("Error"), serial->errorString());
+        serial->timer->stop();
+        ui->statusBar->showMessage(tr("Open error"));
+    }
+}
+
+
+void MainWindow::readData()
+{
+    QByteArray data = serial->readAll();
+    serial->mavRead(&data);
+}
+
+void MainWindow::closeSerialPort()
+{
+    if (serial->isOpen())
+        serial->close();
+    console->setEnabled(false);
+    serial->timer->stop();
+    ui->actionConnect->setEnabled(true);
+    ui->actionDisconnect->setEnabled(false);
+    ui->actionConfigure->setEnabled(true);
+    ui->statusBar->showMessage(tr("Disconnected"));
+}
+
+
+void MainWindow::about()
+{
+    QMessageBox::about(this, tr("About ELEC3300-UI"),
+                       tr("\tThis UI is designed for \n"
+                          "\ta 2015 Fall semester ELEC3300\n"
+                          "\tsmart house project"));
+}
+
+
+void MainWindow::writeData(const QByteArray &data)
+{
+   data.begin();
+  //  serial->write(data);
+ //   serial->send_test_urob();
+  //  serial->send_manual_setpoint();
+ //   serial->cmd_do_set_mode();//MAV_MODE_STABILIZE_ARMED);
+  //  serial->send_manual_control();
+}
+
+void MainWindow::initActionsConnections()
+{
+    connect(ui->actionConnect, SIGNAL(triggered()), this, SLOT(openSerialPort()));
+    connect(ui->actionDisconnect, SIGNAL(triggered()), this, SLOT(closeSerialPort()));
+    connect(ui->actionQuit, SIGNAL(triggered()), this, SLOT(close()));
+    connect(ui->actionConfigure, SIGNAL(triggered()), settings, SLOT(show()));
+    connect(ui->actionClear, SIGNAL(triggered()), console, SLOT(clear()));
+    connect(ui->actionAbout, SIGNAL(triggered()), this, SLOT(about()));
+    connect(ui->actionAboutQt, SIGNAL(triggered()), qApp, SLOT(aboutQt()));
+    connect(ui->actionBluetooth, SIGNAL(triggered()), settings, SLOT(show()));
+    connect(ui->actionLogo, SIGNAL(triggered()), this, SLOT(about()));
+}
+
+void MainWindow::initSerialConnections(){
+
+    connect(serial, SIGNAL(error(QSerialPort::SerialPortError)), this,
+        SLOT(handleError(QSerialPort::SerialPortError)));
+    connect(serial, SIGNAL(readyRead()), this, SLOT(readData()));
+    connect(console, SIGNAL(getData(QByteArray)), this, SLOT(writeData(QByteArray)));
+    connect(serial, SIGNAL(flightLogReady()), this, SLOT(writeFlightLog()));
+}
+
+void MainWindow::initUpdateConnections(){
+    connect(serial,SIGNAL(timeChanged()),this,SLOT(onUpdateTime()));
+    connect(serial,SIGNAL(localChanged()),this,SLOT(onUpdateLocal()));
+    //will do something with the global
+    //will do something with the battery
+ //   connect(serial,SIGNAL(globalChanged()),this,SLOT(onUpdateGlobal()));
+    connect(serial,SIGNAL(batteryChanged(int)),this,SLOT(onUpdateBattery()));
+    connect(serial,SIGNAL(IMUChanged()),this,SLOT(onUpdateIMU()));
+    connect(serial,SIGNAL(attitudeChanged()),this,SLOT(onUpdateAttitude()));
+}
+
+void MainWindow::initCommandConnections(){
+ //   connect(this,SIGNAL(armingStateChanged(ARM_STATE)),this,SLOT());
+ //   connect(this,SIGNAL(flightModeChanged(FLIGHT_MODE)),serial,SLOT());
+  //  connect(toggleButton,SIGNAL(clicked()),serial,SLOT(send_manual_setpoint()));
+}
+
+void MainWindow::handleError(QSerialPort::SerialPortError error)
+{
+    if (error == QSerialPort::ResourceError) {
+        QMessageBox::critical(this, tr("Critical Error"), serial->errorString());
+        closeSerialPort();
+    }
+}
+
+void MainWindow::onUpdateTime(){}
+void MainWindow::onUpdateTemp(){}
+void MainWindow::onUpdateDoor(){}
+
+void MainWindow::onSetAc(){}
+void MainWindow::onLogin(){}
+
+
+void MainWindow::keyPressEvent(QKeyEvent *event){
+    switch(event->key()){
+    case Qt::Key_Up:
+        break;
+    }
+}
+
+ void MainWindow::keyReleaseEvent(QKeyEvent* event){
+     switch (event->key()) {
+     case Qt::Key_Up:
+
+     default:
+         break;
+     }
+ }
+
+/** Manual control sliders */
+/*
 void MainWindow::onSetX(int t){
     if(t <= 1000 && t>= -1000){
         char xsldvalue[1024];
@@ -148,8 +383,11 @@ void MainWindow::resetZ(){
 void MainWindow::resetR(){
     onSetR(0);
 }
+*/
+
 
 /** update Info */
+/*
 void MainWindow::onUpdateTime(){
     char time[1024];
     sprintf(time,"time since boot: %d ms",serial->attitude.time_boot_ms);
@@ -260,11 +498,13 @@ void MainWindow::onUpdateAttitude(){
     sprintf(yaw_speed,"Yaw_speed: %3.2f",serial->attitude.yawspeed);
     yawspeedLabel->setText(yaw_speed);
 }
+*/
 
 /** Arming state
  * use this slot to send out serial command
  */
 
+/*
 //will change this later
 void MainWindow::onSetArming(){
 
@@ -277,10 +517,12 @@ void MainWindow::onSetArming(){
         serial->set_mode_disarm();
     }
 }
+*/
 
 /** Flight mode
  * use this slot to send out serial command
  */
+/*
 void MainWindow::onSetFlightMode(){
     if(returnOn->isChecked()){
         flight_mode = RETURN;
@@ -292,7 +534,7 @@ void MainWindow::onSetFlightMode(){
     }
     else{
         modeSwitch->setEnabled(true);
-        if(manualRadioButton->isChecked()){
+        iff(manualRadioButton->isChecked()){
             flight_mode = MANUAL;
             flightModeLabel->setText("Flight Mode: Manual");
             assistSwitch->setEnabled(false);
@@ -762,15 +1004,16 @@ void MainWindow::closeSerialPort()
 
 void MainWindow::about()
 {  //"The <b>UAV Control v1.0</b> is developed by "
-    QMessageBox::about(this, tr("About UAV Control Version 1.0"),
-                       tr("\tUAV Ground Control 1.0\n"
-                          "\tdeveloped on 2015 summer\n"
-                          "\tby Harvard-HKUST Research Team"));
+    QMessageBox::about(this, tr("About ELEC3300-UI"),
+                       tr("\tThis UI is designed for \n"
+                          "\ta 2015 Fall semester ELEC3300\n"
+                          "\tsmart house project"));
 }
 
 
 void MainWindow::writeData(const QByteArray &data)
 {
+   data.begin();
   //  serial->write(data);
  //   serial->send_test_urob();
   //  serial->send_manual_setpoint();
@@ -894,3 +1137,4 @@ void MainWindow::keyPressEvent(QKeyEvent *event){
 
 
 //void MainWindow::keyReleaseEvent(QKeyEvent* event);
+*/

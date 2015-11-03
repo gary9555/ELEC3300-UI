@@ -79,8 +79,8 @@ protected:
 signals:
     //should look at these two later
     //we can use this directly maybe
-    void armingStateChanged(ARM_STATE s);
-    void flightModeChanged(FLIGHT_MODE m);
+   // void armingStateChanged(ARM_STATE s);
+   // void flightModeChanged(FLIGHT_MODE m);
 
 private slots:
     /** Serial port dialog */
@@ -88,19 +88,29 @@ private slots:
     void closeSerialPort();
     void about();
     void writeData(const QByteArray &data);
-    void writeFlightLog();
+  //  void writeFlightLog();
     void readData();
 
     void handleError(QSerialPort::SerialPortError error);
 
     /** Update Info */
     void onUpdateTime();
+    void onUpdateTemp();
+    void onUpdateDoor();
+
+    // Setting commands
+    void onSetAc();
+    void onLogin();
+
+   /*
+    void onUpdateTime();
     void onUpdateLocal();
     void onUpdateGlobal();
     void onUpdateBattery();
     void onUpdateIMU();
     void onUpdateAttitude();
-
+*/
+    /*
     void onSetX(int x);
     void onSetY(int y);
     void onSetZ(int z);
@@ -109,12 +119,12 @@ private slots:
     void resetY();
     void resetZ();
     void resetR();
-
+*/
    /** Arming state */
-   void onSetArming();
+  // void onSetArming();
 
    /** Flight mode swtich */
-   void onSetFlightMode();
+   //void onSetFlightMode();
 
 private:
     /** communication */
@@ -124,19 +134,24 @@ private:
     void initCommandConnections();
 
     /** inside MainWindow */
-    void createInfoGroupBox();
+    void createTimeGroupBox();
+    void createStatusGroupBox();
+    void createCommandGroupBox();
+
+
+ /*   void createInfoGroupBox();
     void createControlSlidersGroupBox();
  //   void createMapGroupBox();
-    void createFlightModeControlGroupBox();
+    void createFlightModeControlGroupBox();*/
 
     /** inside info group */
-    void createTimeGroupBox();
+ /*   void createTimeGroupBox();
     void createLocalGroupBox();
     void createGlobalGroupBox();
     void createBluetoothGroupBox();
     void createBatteryGroupBox();
     void createIMUGroupBox();
-    void createAttitudeGroupBox();
+    void createAttitudeGroupBox();*/
 
     /** inside flight mode control */
 
@@ -152,38 +167,60 @@ private:
     /** UAV Control main window */
     QWidget* widget;
 
-    QGroupBox* infoGroupBox;
-    QGroupBox* controlSlidersGroupBox;
-    QGroupBox* flightModeControlGroupBox;
-    QGroupBox* consoleGroupBox;
-
-    /** Info: real-time feedback from the UAV */
     QGroupBox* timeGroupBox;
-    QGroupBox* localGroupBox;
-    QGroupBox* globalGroupBox;
-    QGroupBox* bluetoothGroupBox; //it is bluetooth now
-    QGroupBox* batteryGroupBox;
-    QGroupBox* IMUGroupBox;
-    QGroupBox* attitudeGroupBox;
+    QGroupBox* statusGroupBox;
+    QGroupBox* commandGroupBox;
 
-    /** inside timeGroupBox */
-    QLabel* timeLabel;//time since boot(ms)
+
+    /** timeGroupBox */
+    QLabel* timeLabel;  // real time display
+
+    /** statusGroupBox */
+    QLabel* temperatureLabel;
+    QLabel* doorConditionLabel;
+
+    /** commandGroupBox */
+    QGroupBox* AcGroupBox;
+        QHBoxLayout* AcLayout;
+            QRadioButton* turnOnAcButton;
+            QRadioButton* turnOffAcButton;
+    QGroupBox* doorGroupBox;
+        QVBoxLayout* doorLayout;
+            QLineEdit* username;
+            QLabel*    uname;
+            QLineEdit* password;
+            QLabel*    pw;
+            QPushButton* openDoor;
+
+    // QGroupBox* infoGroupBox;
+     //QGroupBox* controlSlidersGroupBox;
+     //QGroupBox* flightModeControlGroupBox;
+     //QGroupBox* consoleGroupBox;
+
+     /** Info: real-time feedback from the UAV */
+
+     //QGroupBox* localGroupBox;
+     //QGroupBox* globalGroupBox;
+     //QGroupBox* bluetoothGroupBox; //it is bluetooth now
+     //QGroupBox* batteryGroupBox;
+     //QGroupBox* IMUGroupBox;
+     //QGroupBox* attitudeGroupBox;
 
     /** inside localGroupBox */
-    QLabel* xPosLabel;
+    /*QLabel* xPosLabel;
     QLabel* yPosLabel;
     QLabel* zPosLabel;
     QLabel* vxLabel;
     QLabel* vyLabel;
-    QLabel* vzLabel;
+    QLabel* vzLabel;*/
 
     /** inside globalGroupBox */
-    QLabel* latitudeLabel;
+    /*QLabel* latitudeLabel;
     QLabel* longitudeLabel;
-    QLabel* altitudeLabel;
+    QLabel* altitudeLabel;*/
 
     /** inside IMUgroupBox */
-    QLabel* xAcceLabel;
+    /*QLabel* xAcceLabel;
     QLabel* yAcceLabel;
     QLabel* zAcceLabel;
     QLabel* xGyroLabel;
@@ -193,26 +230,26 @@ private:
     QLabel* yMagLabel;
     QLabel* zMagLabel;
     QLabel* pressure_altitudeLabel;
-    QLabel* temperatureLabel;
+    QLabel* temperatureLabel;*/
 
     /** inside batteryGroupBox */
-    //add a low battery alert
+   /* //add a low battery alert
     QLabel* voltageLabel;
-    QLabel* remainingLabel;
+    QLabel* remainingLabel;*/
 
     /** inside altitudeGroupBox */
-    QLabel* rollangleLabel;
+   /* QLabel* rollangleLabel;
     QLabel* pitchangleLabel;
     QLabel* yawangleLabel;
     QLabel* rollspeedLabel;
     QLabel* pitchspeedLabel;
-    QLabel* yawspeedLabel;
+    QLabel* yawspeedLabel;*/
 
     /** inside bluetoothGroupBox */
     //now it is empty
 
     /** Manual control sliders */
-    QSlider* xSlider;
+  /*  QSlider* xSlider;
     QSlider* ySlider;
     QSlider* zSlider;
     QSlider* rSlider;
@@ -224,10 +261,10 @@ private:
     QLabel* xValue;
     QLabel* yValue;
     QLabel* zValue;
-    QLabel* rValue;
+    QLabel* rValue;*/
 
     /** Inside flight mode control */
-    QGroupBox* returnSwitch;
+   /*QGroupBox* returnSwitch;
     QHBoxLayout* returnLayout;
     QRadioButton* returnOn;
     QRadioButton* returnOff;
@@ -255,7 +292,7 @@ private:
     int x;
     int y;
     int z;
-    int r;
+    int r; */
 };
 
 #endif // MAINWINDOW_H
