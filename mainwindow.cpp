@@ -216,7 +216,7 @@ void MainWindow::openSerialPort()
 void MainWindow::readData()
 {
     QByteArray data = serial->readAll();
-    serial->mavRead(&data);
+    serial->uartRead(&data);
 }
 
 void MainWindow::closeSerialPort()
@@ -266,22 +266,21 @@ void MainWindow::initActionsConnections()
 
 void MainWindow::initSerialConnections(){
 
-    connect(serial, SIGNAL(error(QSerialPort::SerialPortError)), this,
-        SLOT(handleError(QSerialPort::SerialPortError)));
+    connect(serial, SIGNAL(error(QSerialPort::SerialPortError)), this, SLOT(handleError(QSerialPort::SerialPortError)));
     connect(serial, SIGNAL(readyRead()), this, SLOT(readData()));
     connect(console, SIGNAL(getData(QByteArray)), this, SLOT(writeData(QByteArray)));
-    connect(serial, SIGNAL(flightLogReady()), this, SLOT(writeFlightLog()));
+    //connect(serial, SIGNAL(flightLogReady()), this, SLOT(writeFlightLog()));
 }
 
 void MainWindow::initUpdateConnections(){
     connect(serial,SIGNAL(timeChanged()),this,SLOT(onUpdateTime()));
-    connect(serial,SIGNAL(localChanged()),this,SLOT(onUpdateLocal()));
+    //connect(serial,SIGNAL(localChanged()),this,SLOT(onUpdateLocal()));
     //will do something with the global
     //will do something with the battery
- //   connect(serial,SIGNAL(globalChanged()),this,SLOT(onUpdateGlobal()));
-    connect(serial,SIGNAL(batteryChanged(int)),this,SLOT(onUpdateBattery()));
-    connect(serial,SIGNAL(IMUChanged()),this,SLOT(onUpdateIMU()));
-    connect(serial,SIGNAL(attitudeChanged()),this,SLOT(onUpdateAttitude()));
+    //connect(serial,SIGNAL(globalChanged()),this,SLOT(onUpdateGlobal()));
+    //connect(serial,SIGNAL(batteryChanged(int)),this,SLOT(onUpdateBattery()));
+    //connect(serial,SIGNAL(IMUChanged()),this,SLOT(onUpdateIMU()));
+    //connect(serial,SIGNAL(attitudeChanged()),this,SLOT(onUpdateAttitude()));
 }
 
 void MainWindow::initCommandConnections(){

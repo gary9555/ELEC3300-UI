@@ -88,7 +88,7 @@ private slots:
     void closeSerialPort();
     void about();
     void writeData(const QByteArray &data);
-  //  void writeFlightLog();
+    //void writeFlightLog();
     void readData();
 
     void handleError(QSerialPort::SerialPortError error);
@@ -109,7 +109,8 @@ private slots:
     void onUpdateBattery();
     void onUpdateIMU();
     void onUpdateAttitude();
-*/
+    */
+
     /*
     void onSetX(int x);
     void onSetY(int y);
@@ -164,7 +165,7 @@ private:
     SettingsDialog* settings;
     MavSerialPort* serial;
 
-    /** UAV Control main window */
+    /** Smart House Control main window */
     QWidget* widget;
 
     QGroupBox* timeGroupBox;
@@ -192,7 +193,7 @@ private:
             QLabel*    pw;
             QPushButton* openDoor;
 
-    // QGroupBox* infoGroupBox;
+     //QGroupBox* infoGroupBox;
      //QGroupBox* controlSlidersGroupBox;
      //QGroupBox* flightModeControlGroupBox;
      //QGroupBox* consoleGroupBox;

@@ -19,8 +19,8 @@ public:
     QTimer* timer;
     MavSerialPort(QObject* parent);
 
-    void mavRead(QByteArray* ba);
-    void mavDecode(mavlink_message_t &message);
+    void uartRead(QByteArray* ba);
+    void uartDecode(mavlink_message_t &message);
 
     double latitude() const;
     double longitude() const;

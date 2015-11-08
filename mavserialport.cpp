@@ -280,7 +280,7 @@ void MavSerialPort::statustext_handler(){
     emit flightLogReady();
 }
 
-void MavSerialPort::mavRead(QByteArray* ba){
+void MavSerialPort::uartRead(QByteArray* ba){
     unsigned char *buf;
     buf = (unsigned char*)ba->data();
 
@@ -289,13 +289,13 @@ void MavSerialPort::mavRead(QByteArray* ba){
         //does it matter if i change it to COMM_0 ?
         msgReceived = mavlink_parse_char(MAVLINK_COMM_1, buf[i], &message, &status);
         if(msgReceived){
-            mavDecode(message);
+            uartDecode(message);
             msgReceived = false;
         }
     }
 }
 
-void MavSerialPort::mavDecode(mavlink_message_t &message){
+void MavSerialPort::uartDecode(mavlink_message_t &message){
     switch (message.msgid){
     //0
     case MAVLINK_MSG_ID_HEARTBEAT:
