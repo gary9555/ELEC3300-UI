@@ -4,6 +4,7 @@
 
 QT_USE_NAMESPACE
 
+
 MySerialPort::MySerialPort(QObject *parent)
     : QSerialPort(parent)
     , m_standardOutput(stdout)
@@ -13,7 +14,7 @@ MySerialPort::MySerialPort(QObject *parent)
    // connect(m_serialPort, SIGNAL(bytesWritten(qint64)), SLOT(handleBytesWritten(qint64)));
     //connect(m_serialPort, SIGNAL(error(QSerialPort::SerialPortError)), SLOT(handleError(QSerialPort::SerialPortError)));
     connect(m_timer, SIGNAL(timeout()), SLOT(handleTimeout()));
-    //connect(this, SIGNAL(readyRead()), SLOT(handleReadyRead()));
+    connect(this, SIGNAL(readyRead()), SLOT(handleReadyRead()));
     connect(this, SIGNAL(error(QSerialPort::SerialPortError)), SLOT(handleError(QSerialPort::SerialPortError)));
 }
 
@@ -67,17 +68,21 @@ void MySerialPort::writeFoo(const QByteArray &writeData)
 
 void MySerialPort::handleReadyRead()
 {
-    emit readyRead();
-    m_readData.append(this->read(64));
+    //m_readData.clear();
+    while(canReadLine())
+        m_readData = readLine(64);
+        //m_readData.append(this->read(64));
     if (!m_readData.isEmpty()){
-        m_standardOutput << m_readData<< endl;
+        //m_standardOutput << m_readData<< endl;
         // m_standardOutput << m_readData ;
+
     }
-    if(m_readData.size())
-        m_readData.clear();
+    emit readyCollect();
+
     //m_standardOutput << endl;
   //  if (!m_timer.isActive())
     //    m_timer.start(5000);
+
 }
 
 

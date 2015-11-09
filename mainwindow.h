@@ -84,6 +84,7 @@ signals:
    // void armingStateChanged(ARM_STATE s);
    // void flightModeChanged(FLIGHT_MODE m);
 
+
 private slots:
     /** Serial port dialog */
     void openSerialPort();

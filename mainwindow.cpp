@@ -198,7 +198,7 @@ void MainWindow::createComTestGroupBox(){
     layout->addWidget(send);
 
     connect(send,SIGNAL(clicked()),this,SLOT(onSend()));
-    connect(serial,SIGNAL(readyRead()), this,SLOT(onUpdateRx()));
+    connect(serial,SIGNAL(readyCollect()), this,SLOT(onUpdateRx()));
 
     comTestGroupBox->setLayout(layout);
     comTestGroupBox->setAlignment(Qt::AlignHCenter);
@@ -338,9 +338,13 @@ void MainWindow::onSend(){
 }
 
 void MainWindow::onUpdateRx(){
-    QByteArray data = serial->readAll();
-    Rxmsg->setText("Received message:\n"+data);
-
+    //QByteArray data = serial->readAll();
+    QByteArray data=serial->m_readData;//serial->m_readData.append(serial->read(64));
+    if (!data.isEmpty()){
+        Rxmsg->setText("Received message:\n"+data);
+    }
+    //if(data.size())
+    //  serial->m_readData.clear();
 }
 
 

@@ -17,6 +17,9 @@ public:
 
     void writeFoo(const QByteArray &writeData);
 
+signals:
+    void readyCollect();
+
 private slots:
     void handleBytesWritten(qint64 bytes);
     void handleTimeout();
