@@ -89,11 +89,16 @@ SerialPortReader::~SerialPortReader()
 
 void SerialPortReader::handleReadyRead()
 {
-    m_readData.append(m_serialPort->readAll());
-    if (!m_readData.isEmpty())
-        m_standardOutput << m_readData << endl;
-    if (!m_timer.isActive())
-        m_timer.start(5000);
+    m_readData.append(m_serialPort->read(64));
+    if (!m_readData.isEmpty()){
+        m_standardOutput << m_readData<< endl;
+        // m_standardOutput << m_readData ;
+    }
+    if(m_readData.size())
+        m_readData.clear();
+    //m_standardOutput << endl;
+  //  if (!m_timer.isActive())
+    //    m_timer.start(5000);
 }
 
 void SerialPortReader::handleTimeout()

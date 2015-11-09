@@ -38,6 +38,7 @@
 #include "settingsdialog.h"
 #include <QMessageBox>
 #include <QLineEdit>
+#include "myserialport.h"
 
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
@@ -48,7 +49,7 @@ MainWindow::MainWindow(QWidget *parent) :
     console = new Console;
     console->setEnabled(false);
 
-    serial = new MavSerialPort(this);
+    serial = new MySerialPort(this);
     settings = new SettingsDialog(this);
 
     ui->actionConnect->setEnabled(true);
@@ -67,10 +68,12 @@ MainWindow::MainWindow(QWidget *parent) :
     createTimeGroupBox();
     createStatusGroupBox();
     createCommandGroupBox();
+    createComTestGroupBox();
 
     centralLayout->addWidget(timeGroupBox,0,0);
     centralLayout->addWidget(statusGroupBox,0,1);
     centralLayout->addWidget(commandGroupBox,1,0);
+    centralLayout->addWidget(comTestGroupBox,1,1);
 
 
     /*consoleGroupBox = new QGroupBox(tr("Console"),this);
@@ -182,6 +185,26 @@ void MainWindow::createCommandGroupBox(){
     commandGroupBox->setAlignment(Qt::AlignHCenter);
 }
 
+void MainWindow::createComTestGroupBox(){
+    comTestGroupBox = new QGroupBox(tr("Communication Test"),this);
+    QVBoxLayout* layout = new QVBoxLayout(comTestGroupBox);
+
+    Rxmsg = new QLabel(tr("Received message:"), this);
+    Txmsg = new QLineEdit(this);
+    send = new QPushButton(tr("Send"), this);
+
+    layout->addWidget(Rxmsg);
+    layout->addWidget(Txmsg);
+    layout->addWidget(send);
+
+    connect(send,SIGNAL(clicked()),this,SLOT(onSend()));
+    connect(serial,SIGNAL(readyRead()), this,SLOT(onUpdateRx()));
+
+    comTestGroupBox->setLayout(layout);
+    comTestGroupBox->setAlignment(Qt::AlignHCenter);
+
+
+}
 
 void MainWindow::openSerialPort()
 {
@@ -195,7 +218,8 @@ void MainWindow::openSerialPort()
     serial->setParity(p.parity);
     serial->setStopBits(p.stopBits);
     serial->setFlowControl(p.flowControl);
-    serial->timer->start(200);
+    serial->m_timer->start(200);
+
     if (serial->open(QIODevice::ReadWrite)) {
             console->setEnabled(true);
             console->setLocalEchoEnabled(p.localEchoEnabled);
@@ -207,7 +231,7 @@ void MainWindow::openSerialPort()
                                        .arg(p.stringParity).arg(p.stringStopBits).arg(p.stringFlowControl));
     } else {
         QMessageBox::critical(this, tr("Error"), serial->errorString());
-        serial->timer->stop();
+        serial->m_timer->stop();
         ui->statusBar->showMessage(tr("Open error"));
     }
 }
@@ -216,7 +240,8 @@ void MainWindow::openSerialPort()
 void MainWindow::readData()
 {
     QByteArray data = serial->readAll();
-    serial->uartRead(&data);
+    //serial->uartRead(&data);
+    Rxmsg->setText("Received Message:"+data);
 }
 
 void MainWindow::closeSerialPort()
@@ -224,7 +249,7 @@ void MainWindow::closeSerialPort()
     if (serial->isOpen())
         serial->close();
     console->setEnabled(false);
-    serial->timer->stop();
+    serial->m_timer->stop();
     ui->actionConnect->setEnabled(true);
     ui->actionDisconnect->setEnabled(false);
     ui->actionConfigure->setEnabled(true);
@@ -243,8 +268,8 @@ void MainWindow::about()
 
 void MainWindow::writeData(const QByteArray &data)
 {
-   data.begin();
-  //  serial->write(data);
+
+    serial->write(data);
  //   serial->send_test_urob();
   //  serial->send_manual_setpoint();
  //   serial->cmd_do_set_mode();//MAV_MODE_STABILIZE_ARMED);
@@ -267,13 +292,16 @@ void MainWindow::initActionsConnections()
 void MainWindow::initSerialConnections(){
 
     connect(serial, SIGNAL(error(QSerialPort::SerialPortError)), this, SLOT(handleError(QSerialPort::SerialPortError)));
-    connect(serial, SIGNAL(readyRead()), this, SLOT(readData()));
-    connect(console, SIGNAL(getData(QByteArray)), this, SLOT(writeData(QByteArray)));
+
+
+
+    //connect(serial, SIGNAL(readyRead()), this, SLOT(readData()));
+    //connect(console, SIGNAL(getData(QByteArray)), this, SLOT(writeData(QByteArray)));
     //connect(serial, SIGNAL(flightLogReady()), this, SLOT(writeFlightLog()));
 }
 
 void MainWindow::initUpdateConnections(){
-    connect(serial,SIGNAL(timeChanged()),this,SLOT(onUpdateTime()));
+    //connect(serial,SIGNAL(timeChanged()),this,SLOT(onUpdateTime()));
     //connect(serial,SIGNAL(localChanged()),this,SLOT(onUpdateLocal()));
     //will do something with the global
     //will do something with the battery
@@ -303,6 +331,18 @@ void MainWindow::onUpdateDoor(){}
 
 void MainWindow::onSetAc(){}
 void MainWindow::onLogin(){}
+
+void MainWindow::onSend(){
+    Txmsg->text();
+
+}
+
+void MainWindow::onUpdateRx(){
+    QByteArray data = serial->readAll();
+    Rxmsg->setText("Received message:\n"+data);
+
+}
+
 
 
 void MainWindow::keyPressEvent(QKeyEvent *event){

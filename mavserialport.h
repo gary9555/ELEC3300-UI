@@ -16,7 +16,7 @@ class MavSerialPort: public QSerialPort {
     Q_OBJECT
 
 public:
-    QTimer* timer;
+    QTimer* m_timer;
     MavSerialPort(QObject* parent);
 
     void uartRead(QByteArray* ba);

@@ -49,6 +49,7 @@
 #include <QRadioButton>
 
 #include "mavserialport.h"
+#include "myserialport.h"
 
 QT_BEGIN_NAMESPACE
 
@@ -61,6 +62,7 @@ QT_END_NAMESPACE
 class Console;
 class SettingsDialog;
 class MavSerialPort;
+class MySerialPOrt;
 
 class MainWindow : public QMainWindow
 {
@@ -97,10 +99,12 @@ private slots:
     void onUpdateTime();
     void onUpdateTemp();
     void onUpdateDoor();
-
+    void onUpdateRx();
     // Setting commands
     void onSetAc();
     void onLogin();
+
+    void onSend();
 
    /*
     void onUpdateTime();
@@ -138,6 +142,7 @@ private:
     void createTimeGroupBox();
     void createStatusGroupBox();
     void createCommandGroupBox();
+    void createComTestGroupBox();
 
 
  /*   void createInfoGroupBox();
@@ -163,7 +168,8 @@ private:
     /** Console */
     Console* console;
     SettingsDialog* settings;
-    MavSerialPort* serial;
+   // MavSerialPort* serial;
+    MySerialPort* serial;
 
     /** Smart House Control main window */
     QWidget* widget;
@@ -192,6 +198,12 @@ private:
             QLineEdit* password;
             QLabel*    pw;
             QPushButton* openDoor;
+
+    /** Communication Test Box */
+    QGroupBox* comTestGroupBox;
+        QLabel* Rxmsg;
+        QLineEdit* Txmsg;
+        QPushButton* send;
 
      //QGroupBox* infoGroupBox;
      //QGroupBox* controlSlidersGroupBox;

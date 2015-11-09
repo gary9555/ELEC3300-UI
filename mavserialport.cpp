@@ -9,9 +9,9 @@ MavSerialPort::MavSerialPort(QObject* parent):
     target_system(1),target_component(0),
     x(0), y(0), z(0), r(0){
 
-    timer = new QTimer(this);
+    m_timer = new QTimer(this);
     //connect(timer, SIGNAL(timeout()),this, SLOT(send_set_attitude_target()));
-    connect(timer, SIGNAL(timeout()),this, SLOT(send_manual_control()));
+    connect(m_timer, SIGNAL(timeout()),this, SLOT(send_manual_control()));
     // timer->start(200); will move this to connect button
 }
 

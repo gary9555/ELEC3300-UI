@@ -52,14 +52,19 @@
 #include "mainwindow.h"
 
 #include "serialport.h"
+#include "myserialport.h"
 //#define DEBUG_SERIAL
+//#define SERIAL_TEST
+#define MAIN
 QT_USE_NAMESPACE
 
 int main(int argc, char *argv[])
 {
-   /* QApplication a(argc, argv);
+#ifdef MAIN
+    QApplication a(argc, argv);
     MainWindow w;
     w.show();
+#endif
 
 #ifdef DEBUG_SERIAL
     foreach (const QSerialPortInfo &info, QSerialPortInfo::availablePorts()) {
@@ -75,8 +80,9 @@ int main(int argc, char *argv[])
             serial.close();
     }
 #endif
-    return a.exec();*/
-    QCoreApplication coreApplication(argc, argv);
+    return a.exec();
+#ifdef SERIAL_TEST
+        QCoreApplication coreApplication(argc, argv);
         //int argumentCount = QCoreApplication::arguments().size();
         QStringList argumentList = QCoreApplication::arguments();
 
@@ -87,8 +93,9 @@ int main(int argc, char *argv[])
             return 1;
         }
 */
+
         QSerialPort serialPort;
-        QString serialPortName = "/dev/ttyUSB2";//argumentList.at(1);
+        QString serialPortName = "/dev/ttyUSB0";//argumentList.at(1);
         serialPort.setPortName(serialPortName);
 
         int serialPortBaudRate = 57600;//(argumentCount > 2) ? argumentList.at(2).toInt() : QSerialPort::Baud9600;
@@ -102,4 +109,35 @@ int main(int argc, char *argv[])
         SerialPortReader serialPortReader(&serialPort);
 
         return coreApplication.exec();
+#endif
+
+#ifdef MY_SERIAL
+        QCoreApplication coreApplication(argc, argv);
+        //int argumentCount = QCoreApplication::arguments().size();
+        QStringList argumentList = QCoreApplication::arguments();
+
+        QTextStream standardOutput(stdout);
+/*
+        if (argumentCount == 1) {
+            standardOutput << QObject::tr("Usage: %1 <serialportname> [baudrate]").arg(argumentList.first()) << endl;
+            return 1;
+        }
+*/
+
+        MySerialPort serialPort;
+        QString serialPortName = "/dev/ttyUSB0";//argumentList.at(1);
+        serialPort.setPortName(serialPortName);
+
+        int serialPortBaudRate = 57600;//(argumentCount > 2) ? argumentList.at(2).toInt() : QSerialPort::Baud9600;
+        serialPort.setBaudRate(serialPortBaudRate);
+
+        if (!serialPort.open(QIODevice::ReadOnly)) {
+            standardOutput << QObject::tr("Failed to open port %1, error: %2").arg(serialPortName).arg(serialPort.errorString()) << endl;
+            return 1;
+        }
+
+
+
+        return coreApplication.exec();
+#endif
 }
