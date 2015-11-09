@@ -32,12 +32,15 @@
 **
 ****************************************************************************/
 
+#include <QMessageBox>
+#include <QLineEdit>
+#include <QDateTime>
+
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
 #include "console.h"
 #include "settingsdialog.h"
-#include <QMessageBox>
-#include <QLineEdit>
+
 #include "myserialport.h"
 
 MainWindow::MainWindow(QWidget *parent) :
@@ -98,12 +101,19 @@ MainWindow::MainWindow(QWidget *parent) :
 
     resize(600,200);
     setWindowTitle(QApplication::translate("toplevel", "Smart House Control Panel"));
+
+    startTimer(1000);
 }
 
 MainWindow::~MainWindow()
 {
     delete settings;
     delete ui;
+}
+
+void MainWindow::timerEvent(QTimerEvent * event){
+    switch(event->isAccepted()){default:break;}
+    timeLabel->setText(QTime::currentTime().toString("hh:mm:ss"));
 }
 
 void MainWindow::createTimeGroupBox(){
@@ -186,18 +196,22 @@ void MainWindow::createCommandGroupBox(){
 }
 
 void MainWindow::createComTestGroupBox(){
+
     comTestGroupBox = new QGroupBox(tr("Communication Test"),this);
     QVBoxLayout* layout = new QVBoxLayout(comTestGroupBox);
 
     Rxmsg = new QLabel(tr("Received message:"), this);
-    Txmsg = new QLineEdit(this);
+    Txmsg = new QLabel(tr("Sent message:"), this);
+    Tx = new QLineEdit(this);
     send = new QPushButton(tr("Send"), this);
 
     layout->addWidget(Rxmsg);
     layout->addWidget(Txmsg);
+    layout->addWidget(Tx);
     layout->addWidget(send);
 
     connect(send,SIGNAL(clicked()),this,SLOT(onSend()));
+    connect(Tx,SIGNAL(returnPressed()),this,SLOT(onSend()));
     connect(serial,SIGNAL(readyCollect()), this,SLOT(onUpdateRx()));
 
     comTestGroupBox->setLayout(layout);
@@ -333,8 +347,11 @@ void MainWindow::onSetAc(){}
 void MainWindow::onLogin(){}
 
 void MainWindow::onSend(){
-    Txmsg->text();
-
+    QString str = Tx->text();
+    QByteArray data(str.toStdString().c_str()+'\0',str.size());
+    serial->writeFoo(data);
+    Txmsg->setText("Sent message:\n"+str);
+    Tx->clear();
 }
 
 void MainWindow::onUpdateRx(){

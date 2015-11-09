@@ -63,7 +63,7 @@ void MySerialPort::writeFoo(const QByteArray &writeData)
         QCoreApplication::exit(1);
     }
 
-    m_timer->start(5000);
+    //m_timer->start(5000);
 }
 
 void MySerialPort::handleReadyRead()

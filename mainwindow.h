@@ -77,6 +77,7 @@ public:
 protected:
     void keyPressEvent(QKeyEvent* event);
     void keyReleaseEvent(QKeyEvent* event);
+    void timerEvent(QTimerEvent *event);
 
 signals:
     //should look at these two later
@@ -101,6 +102,8 @@ private slots:
     void onUpdateTemp();
     void onUpdateDoor();
     void onUpdateRx();
+    //void onUpdateTx();
+
     // Setting commands
     void onSetAc();
     void onLogin();
@@ -203,8 +206,10 @@ private:
     /** Communication Test Box */
     QGroupBox* comTestGroupBox;
         QLabel* Rxmsg;
-        QLineEdit* Txmsg;
+        QLabel* Txmsg;
+        QLineEdit* Tx;
         QPushButton* send;
+
 
      //QGroupBox* infoGroupBox;
      //QGroupBox* controlSlidersGroupBox;
