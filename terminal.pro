@@ -12,8 +12,6 @@ SOURCES += \
     mainwindow.cpp \
     settingsdialog.cpp \
     console.cpp \
-    mavserialport.cpp \
-    serialport.cpp \
     myserialport.cpp
 
 HEADERS += \
@@ -173,9 +171,7 @@ HEADERS += \
     mavlink/v1.0/mavlink_helpers.h \
     mavlink/v1.0/mavlink_types.h \
     mavlink/v1.0/protocol.h \
-    mavserialport.h \
     px4_custom_mode.h \
-    serialport.h \
     myserialport.h
 
 FORMS += \

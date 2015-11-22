@@ -1,5 +1,4 @@
 #include "myserialport.h"
-
 #include <QCoreApplication>
 
 QT_USE_NAMESPACE
@@ -52,6 +51,8 @@ void MySerialPort::writeFoo(const QByteArray &writeData)
     m_writeData = writeData;
 
     qint64 bytesWritten = this->write(writeData);
+   m_standardOutput<<bytesWritten<<endl;
+
 
     if (bytesWritten == -1) {
         m_standardOutput << QObject::tr("Failed to write the data to port %1, error: %2")\

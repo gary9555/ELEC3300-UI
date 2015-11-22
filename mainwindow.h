@@ -80,10 +80,7 @@ protected:
     void timerEvent(QTimerEvent *event);
 
 signals:
-    //should look at these two later
-    //we can use this directly maybe
-   // void armingStateChanged(ARM_STATE s);
-   // void flightModeChanged(FLIGHT_MODE m);
+
 
 
 private slots:
@@ -110,31 +107,6 @@ private slots:
 
     void onSend();
 
-   /*
-    void onUpdateTime();
-    void onUpdateLocal();
-    void onUpdateGlobal();
-    void onUpdateBattery();
-    void onUpdateIMU();
-    void onUpdateAttitude();
-    */
-
-    /*
-    void onSetX(int x);
-    void onSetY(int y);
-    void onSetZ(int z);
-    void onSetR(int r);
-    void resetX();
-    void resetY();
-    void resetZ();
-    void resetR();
-*/
-   /** Arming state */
-  // void onSetArming();
-
-   /** Flight mode swtich */
-   //void onSetFlightMode();
-
 private:
     /** communication */
     void initActionsConnections();
@@ -148,31 +120,12 @@ private:
     void createCommandGroupBox();
     void createComTestGroupBox();
 
-
- /*   void createInfoGroupBox();
-    void createControlSlidersGroupBox();
- //   void createMapGroupBox();
-    void createFlightModeControlGroupBox();*/
-
-    /** inside info group */
- /*   void createTimeGroupBox();
-    void createLocalGroupBox();
-    void createGlobalGroupBox();
-    void createBluetoothGroupBox();
-    void createBatteryGroupBox();
-    void createIMUGroupBox();
-    void createAttitudeGroupBox();*/
-
-    /** inside flight mode control */
-
-
 private:
     Ui::MainWindow *ui;
 
     /** Console */
     Console* console;
     SettingsDialog* settings;
-   // MavSerialPort* serial;
     MySerialPort* serial;
 
     /** Smart House Control main window */
@@ -210,108 +163,6 @@ private:
         QLineEdit* Tx;
         QPushButton* send;
 
-
-     //QGroupBox* infoGroupBox;
-     //QGroupBox* controlSlidersGroupBox;
-     //QGroupBox* flightModeControlGroupBox;
-     //QGroupBox* consoleGroupBox;
-
-     /** Info: real-time feedback from the UAV */
-
-     //QGroupBox* localGroupBox;
-     //QGroupBox* globalGroupBox;
-     //QGroupBox* bluetoothGroupBox; //it is bluetooth now
-     //QGroupBox* batteryGroupBox;
-     //QGroupBox* IMUGroupBox;
-     //QGroupBox* attitudeGroupBox;
-
-    /** inside localGroupBox */
-    /*QLabel* xPosLabel;
-    QLabel* yPosLabel;
-    QLabel* zPosLabel;
-    QLabel* vxLabel;
-    QLabel* vyLabel;
-    QLabel* vzLabel;*/
-
-    /** inside globalGroupBox */
-    /*QLabel* latitudeLabel;
-    QLabel* longitudeLabel;
-    QLabel* altitudeLabel;*/
-
-    /** inside IMUgroupBox */
-    /*QLabel* xAcceLabel;
-    QLabel* yAcceLabel;
-    QLabel* zAcceLabel;
-    QLabel* xGyroLabel;
-    QLabel* yGyroLabel;
-    QLabel* zGyroLabel;
-    QLabel* xMagLabel;
-    QLabel* yMagLabel;
-    QLabel* zMagLabel;
-    QLabel* pressure_altitudeLabel;
-    QLabel* temperatureLabel;*/
-
-    /** inside batteryGroupBox */
-   /* //add a low battery alert
-    QLabel* voltageLabel;
-    QLabel* remainingLabel;*/
-
-    /** inside altitudeGroupBox */
-   /* QLabel* rollangleLabel;
-    QLabel* pitchangleLabel;
-    QLabel* yawangleLabel;
-    QLabel* rollspeedLabel;
-    QLabel* pitchspeedLabel;
-    QLabel* yawspeedLabel;*/
-
-    /** inside bluetoothGroupBox */
-    //now it is empty
-
-    /** Manual control sliders */
-  /*  QSlider* xSlider;
-    QSlider* ySlider;
-    QSlider* zSlider;
-    QSlider* rSlider;
-
-    QLabel* xLabel;
-    QLabel* yLabel;
-    QLabel* zLabel;
-    QLabel* rLabel;
-    QLabel* xValue;
-    QLabel* yValue;
-    QLabel* zValue;
-    QLabel* rValue;*/
-
-    /** Inside flight mode control */
-   /*QGroupBox* returnSwitch;
-    QHBoxLayout* returnLayout;
-    QRadioButton* returnOn;
-    QRadioButton* returnOff;
-
-    QGroupBox* modeSwitch;
-    QHBoxLayout* modeLayout;
-    QRadioButton* manualRadioButton;
-    QRadioButton* assistRadioButton;
-    QRadioButton* autoRadioButton;
-
-    QGroupBox* assistSwitch;
-    QHBoxLayout* assistLayout;
-    QRadioButton* altctl;
-    QRadioButton* posctl;
-
-    QGroupBox* autoSwitch;
-    QHBoxLayout* autoLayout;
-    QRadioButton* mission;
-    QRadioButton* loiter;
-    QRadioButton* delivery;
-
-    QPushButton* armButton;
-    QLabel* flightModeLabel;
-
-    int x;
-    int y;
-    int z;
-    int r; */
 };
 
 #endif // MAINWINDOW_H
