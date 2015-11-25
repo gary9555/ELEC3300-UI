@@ -157,8 +157,8 @@
   </action>
   <action name="actionLogo">
    <property name="icon">
-    <iconset resource="terminal.qrc">
-     <normaloff>:/images/logo.png</normaloff>:/images/logo.png</iconset>
+    <iconset>
+     <normaloff>images/moneymagpie_house4.png</normaloff>images/moneymagpie_house4.png</iconset>
    </property>
    <property name="text">
     <string>logo</string>

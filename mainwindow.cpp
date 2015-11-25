@@ -119,6 +119,10 @@ void MainWindow::createStatusGroupBox(){
     statusGroupBox = new QGroupBox(tr("House Status"),this);
     QGridLayout* layout  = new QGridLayout(statusGroupBox);
 
+    sysState = new QLabel(this);
+    sysState->setBaseSize(50,30);
+    sysState->setText("System Status: Disconnected");
+
     temperatureLabel = new QLabel(this);
     temperatureLabel->setBaseSize(50,30);
     temperatureLabel->setText("Current Temperature: Unknown");
@@ -127,8 +131,9 @@ void MainWindow::createStatusGroupBox(){
     doorConditionLabel->setBaseSize(50,30);
     doorConditionLabel->setText("Door Status: Unknown");
 
-    layout->addWidget(temperatureLabel,0,0);
-    layout->addWidget(doorConditionLabel,1,0);
+    layout->addWidget(sysState,0,0);
+    layout->addWidget(temperatureLabel,1,0);
+    layout->addWidget(doorConditionLabel,2,0);
 
     statusGroupBox->setLayout(layout);
 }
@@ -146,12 +151,31 @@ void MainWindow::createCommandGroupBox(){
     turnOffAcButton = new QRadioButton("Off",this);
     turnOffAcButton->setChecked(true);
 
+
     AcLayout->addWidget(turnOnAcButton);
     AcLayout->addWidget(turnOffAcButton);
     AcGroupBox->setLayout(AcLayout);
 
+    // fingerprint commander
+    FPGroupBox = new QGroupBox(tr("Air-Conditioner"),this);
+    FPLayout = new QHBoxLayout(AcGroupBox);
+    addUser = new QRadioButton("Add",this);
+    addUser->setChecked(false);
+    verifyUser = new QRadioButton("Verify",this);
+    verifyUser->setChecked(true);
+    clearUser = new QRadioButton("Clear All",this);
+    clearUser->setChecked(false);
+
+
+    FPLayout->addWidget(addUser);
+    FPLayout->addWidget(verifyUser);
+    FPLayout->addWidget(clearUser);
+    FPGroupBox->setLayout(FPLayout);
+
+
+
     // Door commander
-    doorGroupBox = new QGroupBox(tr("Open Door"),this);
+    doorGroupBox = new QGroupBox(tr("System Login"),this);
     doorLayout = new QVBoxLayout(doorGroupBox);
     uname = new QLabel(tr("Username"), this);
     username = new QLineEdit(this);
@@ -160,21 +184,29 @@ void MainWindow::createCommandGroupBox(){
     password->setEchoMode(QLineEdit::Password);
     password->setInputMethodHints(Qt::ImhHiddenText| Qt::ImhNoPredictiveText|Qt::ImhNoAutoUppercase);
     openDoor = new QPushButton(tr("Login"), this);
+    LogOff = new QPushButton(tr("Log Off"), this);
 
     doorLayout->addWidget(uname);
     doorLayout->addWidget(username);
     doorLayout->addWidget(pw);
     doorLayout->addWidget(password);
     doorLayout->addWidget(openDoor);
+    doorLayout->addWidget(LogOff);
     doorGroupBox->setLayout(doorLayout);
 
     layout->addWidget(AcGroupBox);
+    layout->addWidget(FPGroupBox);
     layout->addWidget(doorGroupBox);
 
     // connect slots
     connect(turnOnAcButton,SIGNAL(clicked()),this,SLOT(onSetAc()));
-    connect(turnOffAcButton,SIGNAL(clicked()),this,SLOT(onSetAc()));
+    connect(turnOffAcButton,SIGNAL(clicked()),this,SLOT(onCloseAc()));
+    connect(addUser,SIGNAL(clicked()),this,SLOT(onAdd()));
+    connect(verifyUser,SIGNAL(clicked()),this,SLOT(onVerify()));
+    connect(clearUser,SIGNAL(clicked()),this,SLOT(onClear()));
     connect(openDoor,SIGNAL(clicked()),this,SLOT(onLogin()));
+    connect(password,SIGNAL(returnPressed()),this,SLOT(onLogin()));
+    connect(LogOff,SIGNAL(clicked()),this,SLOT(onLogOff()));
 
     commandGroupBox->setLayout(layout);
     commandGroupBox->setAlignment(Qt::AlignHCenter);
@@ -308,15 +340,47 @@ void MainWindow::onUpdateTime(){}
 void MainWindow::onUpdateTemp(){}
 void MainWindow::onUpdateDoor(){}
 
-void MainWindow::onSetAc(){}
-void MainWindow::onLogin(){}
+void MainWindow::onSetAc(){
+    QByteArray ac_on = "#CM#A1";
+    serial->writeFoo(ac_on);
+}
+
+void MainWindow::onCloseAc(){
+    QByteArray ac_off = "#CM#A0";
+    serial->writeFoo(ac_off);
+}
+
+void MainWindow::onAdd(){
+    QByteArray add = "#CM#F1";
+    serial->writeFoo(add);
+}
+
+void MainWindow::onVerify(){
+    QByteArray verify = "#CM#A2";
+    serial->writeFoo(verify);
+}
+
+void MainWindow::onClear(){
+    QByteArray clear = "#CM#A3";
+    serial->writeFoo(clear);
+}
+
+void MainWindow::onLogin(){
+    QString str = "#LG#"+username->text()+'/'+ password->text();
+    QByteArray login(str.toStdString().c_str(),str.size());
+    serial->writeFoo(login);
+
+}
+
+void MainWindow::onLogOff(){
+    QByteArray logoff = "#LF#";
+    serial->writeFoo(logoff);
+}
 
 void MainWindow::onSend(){
     QString str = Tx->text();
-    str+='\n';
     QByteArray data(str.toStdString().c_str(),str.size());
     serial->writeFoo(data);
-   // writeData(data);
     Txmsg->setText("Sent message:\n"+str);
     Tx->clear();
 }
@@ -324,8 +388,45 @@ void MainWindow::onSend(){
 void MainWindow::onUpdateRx(){
     //QByteArray data = serial->readAll();
     QByteArray data=serial->m_readData;//serial->m_readData.append(serial->read(64));
+
     if (!data.isEmpty()){
-        Rxmsg->setText("Received message:\n"+data);
+        if(data.startsWith("#LG#")){
+            Rxmsg->setText("Received message:\nLogged in to house management system");
+            sysState->setText("<font color='green'>System Status: Connected</font>");
+        }
+        else if (data.startsWith("#LF#")){
+            Rxmsg->setText("Received message:\nLogged Off");
+            sysState->setText("<font color='black'>System Status: Disconnected</font>");
+        }
+        else if (data.startsWith("#IF#")){
+
+            if(data.at(4)=='T')
+                temperatureLabel->setText("Current Temperature:"+ data.mid(5,data.size()));
+            else if(data.at(4)=='D'){
+                if(data.at(5)=='0')
+                    doorConditionLabel->setText("<font color='green'>Door Status: Closed</font>");
+                else if(data.at(4)=='1'){
+                    doorConditionLabel->setText("<font color='red'>Door Status: Open</font>");
+                }
+
+                else;
+            }
+            else if(data.at(4)=='S'){
+                switch(data.at(5)){
+                    case '0':
+                        sysState->setText("<font color='black'>System Status: Disconnected</font>");
+                        break;
+                    case '1':
+                        sysState->setText("<font color='green'>System Status: Connected</font>");
+                        break;
+                    case '2':
+                        break;
+                }
+            }
+            else;
+        }
+        else
+            Rxmsg->setText("Received message:\n"+data);
     }
     //if(data.size())
     //  serial->m_readData.clear();

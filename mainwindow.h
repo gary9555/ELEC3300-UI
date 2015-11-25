@@ -103,7 +103,12 @@ private slots:
 
     // Setting commands
     void onSetAc();
+    void onCloseAc();
+    void onAdd();
+    void onVerify();
+    void onClear();
     void onLogin();
+    void onLogOff();
 
     void onSend();
 
@@ -140,6 +145,7 @@ private:
     QLabel* timeLabel;  // real time display
 
     /** statusGroupBox */
+    QLabel* sysState;
     QLabel* temperatureLabel;
     QLabel* doorConditionLabel;
 
@@ -148,6 +154,11 @@ private:
         QHBoxLayout* AcLayout;
             QRadioButton* turnOnAcButton;
             QRadioButton* turnOffAcButton;
+    QGroupBox* FPGroupBox;
+        QHBoxLayout* FPLayout;
+            QRadioButton* addUser;
+            QRadioButton* verifyUser;
+            QRadioButton* clearUser;
     QGroupBox* doorGroupBox;
         QVBoxLayout* doorLayout;
             QLineEdit* username;
@@ -155,6 +166,7 @@ private:
             QLineEdit* password;
             QLabel*    pw;
             QPushButton* openDoor;
+            QPushButton* LogOff;
 
     /** Communication Test Box */
     QGroupBox* comTestGroupBox;
@@ -162,6 +174,8 @@ private:
         QLabel* Txmsg;
         QLineEdit* Tx;
         QPushButton* send;
+
+    int status; // system status
 
 };
 

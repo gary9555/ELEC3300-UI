@@ -49,8 +49,8 @@ void MySerialPort::handleError(QSerialPort::SerialPortError serialPortError)
 void MySerialPort::writeFoo(const QByteArray &writeData)
 {
     m_writeData = writeData;
-
-    qint64 bytesWritten = this->write(writeData);
+    m_writeData.append('\n');
+    qint64 bytesWritten = this->write(m_writeData);
    m_standardOutput<<bytesWritten<<endl;
 
 
