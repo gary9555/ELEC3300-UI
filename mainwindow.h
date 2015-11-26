@@ -107,6 +107,8 @@ private slots:
     void onAdd();
     void onVerify();
     void onClear();
+    void onOpenCurtain();
+    void onCloseCurtain();
     void onLogin();
     void onLogOff();
 
@@ -147,6 +149,7 @@ private:
     /** statusGroupBox */
     QLabel* sysState;
     QLabel* temperatureLabel;
+    QLabel* curtainLabel;
     QLabel* doorConditionLabel;
 
     /** commandGroupBox */
@@ -159,6 +162,10 @@ private:
             QRadioButton* addUser;
             QRadioButton* verifyUser;
             QRadioButton* clearUser;
+    QGroupBox* CurtainGroupBox;
+        QHBoxLayout* CurtainLayout;
+            QRadioButton* openCurtain;
+            QRadioButton* closeCurtain;
     QGroupBox* doorGroupBox;
         QVBoxLayout* doorLayout;
             QLineEdit* username;

@@ -44,7 +44,7 @@
 #include "myserialport.h"
 
 MainWindow::MainWindow(QWidget *parent) :
-    QMainWindow(parent),
+    QMainWindow(parent),status(0),
     ui(new Ui::MainWindow)
   //  x(0), y(0), z(0), r(0)
 {
@@ -127,13 +127,18 @@ void MainWindow::createStatusGroupBox(){
     temperatureLabel->setBaseSize(50,30);
     temperatureLabel->setText("Current Temperature: Unknown");
 
+    curtainLabel = new QLabel(this);
+    curtainLabel->setBaseSize(50,30);
+    curtainLabel->setText("Curtain: Unknown");
+
     doorConditionLabel = new QLabel(this);
     doorConditionLabel->setBaseSize(50,30);
     doorConditionLabel->setText("Door Status: Unknown");
 
     layout->addWidget(sysState,0,0);
     layout->addWidget(temperatureLabel,1,0);
-    layout->addWidget(doorConditionLabel,2,0);
+    layout->addWidget(curtainLabel,2,0);
+    layout->addWidget(doorConditionLabel,3,0);
 
     statusGroupBox->setLayout(layout);
 }
@@ -150,29 +155,40 @@ void MainWindow::createCommandGroupBox(){
     turnOnAcButton->setChecked(false);
     turnOffAcButton = new QRadioButton("Off",this);
     turnOffAcButton->setChecked(true);
-
+    AcGroupBox->setEnabled(false);
 
     AcLayout->addWidget(turnOnAcButton);
     AcLayout->addWidget(turnOffAcButton);
     AcGroupBox->setLayout(AcLayout);
 
     // fingerprint commander
-    FPGroupBox = new QGroupBox(tr("Air-Conditioner"),this);
-    FPLayout = new QHBoxLayout(AcGroupBox);
+    FPGroupBox = new QGroupBox(tr("Fingerprint access"),this);
+    FPLayout = new QHBoxLayout(FPGroupBox);
     addUser = new QRadioButton("Add",this);
     addUser->setChecked(false);
     verifyUser = new QRadioButton("Verify",this);
-    verifyUser->setChecked(true);
+    verifyUser->setChecked(false);
     clearUser = new QRadioButton("Clear All",this);
     clearUser->setChecked(false);
-
+    FPGroupBox->setEnabled(false);
 
     FPLayout->addWidget(addUser);
     FPLayout->addWidget(verifyUser);
     FPLayout->addWidget(clearUser);
     FPGroupBox->setLayout(FPLayout);
 
+    // curtain commander
+    CurtainGroupBox = new QGroupBox(tr("Curtain"),this);
+    CurtainLayout = new QHBoxLayout(CurtainGroupBox);
+    openCurtain = new QRadioButton("Open Curtain",this);
+    openCurtain->setChecked(false);
+    closeCurtain = new QRadioButton("Close Curtain",this);
+    closeCurtain->setChecked(false);
+    CurtainGroupBox->setEnabled(false);
 
+    CurtainLayout->addWidget(openCurtain);
+    CurtainLayout->addWidget(closeCurtain);
+    CurtainGroupBox->setLayout(CurtainLayout);
 
     // Door commander
     doorGroupBox = new QGroupBox(tr("System Login"),this);
@@ -196,6 +212,7 @@ void MainWindow::createCommandGroupBox(){
 
     layout->addWidget(AcGroupBox);
     layout->addWidget(FPGroupBox);
+    layout->addWidget(CurtainGroupBox);
     layout->addWidget(doorGroupBox);
 
     // connect slots
@@ -204,6 +221,8 @@ void MainWindow::createCommandGroupBox(){
     connect(addUser,SIGNAL(clicked()),this,SLOT(onAdd()));
     connect(verifyUser,SIGNAL(clicked()),this,SLOT(onVerify()));
     connect(clearUser,SIGNAL(clicked()),this,SLOT(onClear()));
+    connect(openCurtain,SIGNAL(clicked()),this,SLOT(onOpenCurtain()));
+    connect(closeCurtain,SIGNAL(clicked()),this,SLOT(onCloseCurtain()));
     connect(openDoor,SIGNAL(clicked()),this,SLOT(onLogin()));
     connect(password,SIGNAL(returnPressed()),this,SLOT(onLogin()));
     connect(LogOff,SIGNAL(clicked()),this,SLOT(onLogOff()));
@@ -356,13 +375,24 @@ void MainWindow::onAdd(){
 }
 
 void MainWindow::onVerify(){
-    QByteArray verify = "#CM#A2";
+    QByteArray verify = "#CM#F2";
     serial->writeFoo(verify);
 }
 
 void MainWindow::onClear(){
-    QByteArray clear = "#CM#A3";
+    QByteArray clear = "#CM#F3";
     serial->writeFoo(clear);
+}
+
+
+void MainWindow::onOpenCurtain(){
+    QByteArray open = "#CM#C1";
+    serial->writeFoo(open);
+}
+
+void MainWindow::onCloseCurtain(){
+    QByteArray close = "#CM#C0";
+    serial->writeFoo(close);
 }
 
 void MainWindow::onLogin(){
@@ -393,10 +423,18 @@ void MainWindow::onUpdateRx(){
         if(data.startsWith("#LG#")){
             Rxmsg->setText("Received message:\nLogged in to house management system");
             sysState->setText("<font color='green'>System Status: Connected</font>");
+            status=1;
+            AcGroupBox->setEnabled(true);
+            FPGroupBox->setEnabled(true);
+            CurtainGroupBox->setEnabled(true);
         }
         else if (data.startsWith("#LF#")){
             Rxmsg->setText("Received message:\nLogged Off");
             sysState->setText("<font color='black'>System Status: Disconnected</font>");
+            status=0;
+            AcGroupBox->setEnabled(false);
+            FPGroupBox->setEnabled(false);
+            CurtainGroupBox->setEnabled(false);
         }
         else if (data.startsWith("#IF#")){
 
@@ -405,19 +443,40 @@ void MainWindow::onUpdateRx(){
             else if(data.at(4)=='D'){
                 if(data.at(5)=='0')
                     doorConditionLabel->setText("<font color='green'>Door Status: Closed</font>");
-                else if(data.at(4)=='1'){
+                else if(data.at(5)=='1'){
                     doorConditionLabel->setText("<font color='red'>Door Status: Open</font>");
                 }
 
                 else;
             }
+            else if(data.at(4)=='C'){
+                switch(data.at(5)){
+                    case '0':
+                        curtainLabel->setText("<font color='black'>Curtain: Closed</font>");
+                        break;
+                    case '1':
+                        curtainLabel->setText("<font color='black'>Curtain: Open</font>");
+                        break;
+
+                }
+            }
             else if(data.at(4)=='S'){
                 switch(data.at(5)){
                     case '0':
                         sysState->setText("<font color='black'>System Status: Disconnected</font>");
+                        if(status==1){
+                            AcGroupBox->setEnabled(false);
+                            FPGroupBox->setEnabled(false);
+                            CurtainGroupBox->setEnabled(false);
+                        }
                         break;
                     case '1':
                         sysState->setText("<font color='green'>System Status: Connected</font>");
+                        if(status==0){
+                            AcGroupBox->setEnabled(true);
+                            FPGroupBox->setEnabled(true);
+                            CurtainGroupBox->setEnabled(true);
+                        }
                         break;
                     case '2':
                         break;
